@@ -6,8 +6,12 @@ import com.arya.crypto.base.BaseController;
 import com.arya.crypto.base.CryptoResponse;
 import com.arya.crypto.base.HttpCode;
 import com.arya.crypto.model.User;
+import org.apache.commons.io.FileUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * @author Arya
@@ -48,16 +52,16 @@ public class CryptoController extends BaseController {
         }
     }
 
-    /**
-     * 无加密 @RequestBody application/json
-     */
-    @RequestMapping(value = "/body", method = RequestMethod.POST)
-    public CryptoResponse body(
-            @RequestBody User user
-    ) {
-        System.out.println("Get unencrypted requestBody: " + user);
-        return CryptoResponse.success();
-    }
+//    /**
+//     * 无加密 @RequestBody application/json
+//     */
+//    @RequestMapping(value = "/body", method = RequestMethod.POST)
+//    public CryptoResponse body(
+//            @RequestBody User user
+//    ) {
+//        System.out.println("Get unencrypted requestBody: " + user);
+//        return CryptoResponse.success();
+//    }
 
     /**
      * 加密 @RequestBody application/json
@@ -73,24 +77,25 @@ public class CryptoController extends BaseController {
         return CryptoResponse.success();
     }
 
-    /**
-     * 无加密 @RequestParam application/x-www-form-urlencoded
-     */
-    @RequestMapping(value = "/param", method = RequestMethod.POST)
-    public CryptoResponse param(
-            @RequestParam String name,
-            @RequestParam String idCard,
-            @RequestParam Long timestamp
-    ) {
-        System.out.println("Get unencrypted requestParams: {name:" + name + " idCard:" + idCard + " timestamp:" + timestamp + "}");
-        return CryptoResponse.success();
-    }
+//    /**
+//     * 无加密 @RequestParam application/x-www-form-urlencoded
+//     */
+//    @RequestMapping(value = "/param", method = RequestMethod.POST)
+//    public CryptoResponse param(
+//            @RequestParam String name,
+//            @RequestParam String idCard,
+//            @RequestParam Long timestamp
+//    ) {
+//        System.out.println("Get unencrypted requestParams: {name:" + name + " idCard:" + idCard + " timestamp:" + timestamp + "}");
+//        return CryptoResponse.success();
+//    }
 
     /**
      * 加密 @RequestParam application/x-www-form-urlencoded
      */
     @RequestMapping(value = "/encrypted-param", method = RequestMethod.POST)
     @Decrypt
+    @Encrypt
     public CryptoResponse encryptedParam(
             @RequestParam String name,
             @RequestParam String idCard,
@@ -101,10 +106,17 @@ public class CryptoController extends BaseController {
     }
 
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
-    @Decrypt
+    @Encrypt
     public CryptoResponse uploadFile(
             @RequestBody MultipartFile file
     ) {
+        try {
+            File newFile = new File("E:\\project\\crypto_request\\crypto-example\\src\\main\\java\\com\\arya\\crypto\\image\\saveAvatar.jpg");
+            FileUtils.copyInputStreamToFile(file.getInputStream(), newFile);
+        } catch (IOException e) {
+            System.out.println("Failed to save file, cause: " + e.getMessage());
+        }
+
         return CryptoResponse.success();
     }
 }

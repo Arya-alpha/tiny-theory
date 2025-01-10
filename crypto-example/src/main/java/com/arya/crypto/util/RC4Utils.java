@@ -9,14 +9,6 @@ public class RC4Utils {
 
     private final static int RC4_BYTES = 256;
 
-//    public static String asString(byte[] buf) {
-//        StringBuffer strbuf = new StringBuffer(buf.length);
-//        for (int i = 0; i < buf.length; i++) {
-//            strbuf.append((char) buf[i]);
-//        }
-//        return strbuf.toString();
-//    }
-
     public static byte[] initKey(String aKey) {
         byte[] b_key = aKey.getBytes();
         byte[] state = new byte[RC4_BYTES];
@@ -38,39 +30,6 @@ public class RC4Utils {
         }
         return state;
     }
-
-//    public static String toHexString(String s) {
-//        StringBuilder str = new StringBuilder();
-//        for (int i = 0; i < s.length(); i++) {
-//            int ch = (int) s.charAt(i);
-//            String s4 = Integer.toHexString(ch & 0xFF);
-//            if (s4.length() == 1) {
-//                s4 = '0' + s4;
-//            }
-//            str.append(s4);
-//        }
-//        return str.toString();
-//    }
-
-//    public static byte[] HexString2Bytes(String src) {
-//        int size = src.length();
-//        byte[] ret = new byte[size / 2];
-//        byte[] tmp = src.getBytes();
-//        for (int i = 0; i < size / 2; i++) {
-//            ret[i] = uniteBytes(tmp[i * 2], tmp[i * 2 + 1]);
-//        }
-//        return ret;
-//    }
-
-//    public static byte uniteBytes(byte src0, byte src1) {
-//        char _b0 = (char) Byte.decode("0x" + new String(new byte[]{src0}))
-//                .byteValue();
-//        _b0 = (char) (_b0 << 4);
-//        char _b1 = (char) Byte.decode("0x" + new String(new byte[]{src1}))
-//                .byteValue();
-//        byte ret = (byte) (_b0 ^ _b1);
-//        return ret;
-//    }
 
     public static byte[] RC4Base(byte[] input, String mKkey) {
         int x = 0;

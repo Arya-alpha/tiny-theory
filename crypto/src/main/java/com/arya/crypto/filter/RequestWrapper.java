@@ -1,5 +1,7 @@
 package com.arya.crypto.filter;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,9 +13,7 @@ import org.springframework.http.MediaType;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Arya
@@ -25,17 +25,18 @@ public class RequestWrapper extends HttpServletRequestWrapper {
     private static final Logger log = LoggerFactory.getLogger(RequestWrapper.class);
 
     private String body;
-    private HttpServletRequest request;
     private Map<String, String[]> parameterMap = new HashMap<>();
 
     public RequestWrapper(HttpServletRequest request) {
         super(request);
-        this.request = request;
 
         String contentType = request.getContentType();
         if (contentType != null && contentType.startsWith(MediaType.MULTIPART_FORM_DATA_VALUE)) {
-            // todo 文件类型处理
-            parseMultipartRequest(request);
+            try {
+                parseMultipartParameters(request);
+            } catch (JsonProcessingException e) {
+                log.error("Error parsing multipart parameters", request.getRequestURI());
+            }
         } else {
             // 复制请求体到body中
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
@@ -53,7 +54,7 @@ public class RequestWrapper extends HttpServletRequestWrapper {
     }
 
     @Override
-    public ServletInputStream getInputStream() throws IOException {
+    public ServletInputStream getInputStream() {
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8));
 
         ServletInputStream servletInputStream = new ServletInputStream() {
@@ -79,12 +80,8 @@ public class RequestWrapper extends HttpServletRequestWrapper {
         return servletInputStream;
     }
 
-    private void parseMultipartRequest(HttpServletRequest request) {
-
-    }
-
     @Override
-    public BufferedReader getReader() throws IOException {
+    public BufferedReader getReader() {
         return new BufferedReader(new InputStreamReader(this.getInputStream()));
     }
 
@@ -105,6 +102,17 @@ public class RequestWrapper extends HttpServletRequestWrapper {
             setAttribute(key, this.parameterMap.get(key));
         }
         return Collections.unmodifiableMap(map);
+    }
+
+    private void parseMultipartParameters(HttpServletRequest request) throws JsonProcessingException {
+        Map<String, Object> parameterMap = new LinkedHashMap<>();
+        Enumeration<String> parameterNames = request.getParameterNames();
+        while (parameterNames.hasMoreElements()) {
+            addParameter(parameterNames.nextElement(), parameterMap);
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        this.body = mapper.writeValueAsString(parameterMap);
     }
 
     public String[] getParameterValues(String name) {
