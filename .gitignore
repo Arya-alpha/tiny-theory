@@ -8,10 +8,18 @@ logs
 .env
 
 .idea/
+*/.idea
 .vscode/
 *.sw*
 
 .gradle
-build/
+.gradletasknamecache
+/build
+buildSrc/build
+/spring-*/build
+/framework-*/build
+/integration-tests/build
+/src/asciidoc/build
+spring-test/test-output/
 
 echo '.idea' >> .gitignore
