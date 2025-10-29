@@ -24,6 +24,97 @@ public class PolygonAlgorithm {
     private static List<Point2D> sortedPoints = new ArrayList<>();
 
     /**
+     * 从给定点集中提取凸包边缘点
+     * 
+     * @param points 输入点集
+     * @return 凸包边缘点集（按逆时针顺序）
+     */
+    public static List<Point2D> getConvexHull(List<Point2D> points) {
+        if (points == null || points.isEmpty() || points.size() < 3) {
+            return new ArrayList<>();
+        }
+        
+        List<Point2D> hull = graham(points);
+        // 更新成员变量
+        edgePoints = new ArrayList<>(hull);
+        sortedPoints = counterclockwisePoints(edgePoints);
+        
+        return new ArrayList<>(hull);
+    }
+
+    /**
+     * 使用Graham扫描算法计算凸包
+     * 
+     * @param points 输入点集
+     * @return 凸包的点集
+     */
+    private static List<Point2D> graham(List<Point2D> points) {
+        if (points.size() < 3) {
+            return new ArrayList<>(points);
+        }
+
+        // 1. 找到最底部的点（y坐标最小，如果相同则x坐标最小）
+        Point2D bottomPoint = points.get(0);
+        int bottomIndex = 0;
+        for (int i = 1; i < points.size(); i++) {
+            Point2D current = points.get(i);
+            if (current.getY() < bottomPoint.getY() || 
+                (current.getY() == bottomPoint.getY() && current.getX() < bottomPoint.getX())) {
+                bottomPoint = current;
+                bottomIndex = i;
+            }
+        }
+
+        // 2. 将底部点移到列表开头
+        List<Point2D> sorted = new ArrayList<>(points);
+        Point2D temp = sorted.get(0);
+        sorted.set(0, sorted.get(bottomIndex));
+        sorted.set(bottomIndex, temp);
+
+        final Point2D startPoint = sorted.get(0);
+
+        // 3. 按极角排序（相对于底部点）
+        sorted.subList(1, sorted.size()).sort((p1, p2) -> {
+            double angle1 = Math.atan2(p1.getY() - startPoint.getY(), p1.getX() - startPoint.getX());
+            double angle2 = Math.atan2(p2.getY() - startPoint.getY(), p2.getX() - startPoint.getX());
+            
+            if (Math.abs(angle1 - angle2) < 1e-10) {
+                // 如果极角相同，按距离排序
+                double dist1 = startPoint.distance(p1);
+                double dist2 = startPoint.distance(p2);
+                return Double.compare(dist1, dist2);
+            }
+            return Double.compare(angle1, angle2);
+        });
+
+        // 4. 使用栈构建凸包
+        List<Point2D> hull = new ArrayList<>();
+        hull.add(sorted.get(0));
+        
+        for (int i = 1; i < sorted.size(); i++) {
+            // 移除导致右转的点
+            while (hull.size() > 1 && 
+                   crossProduct(hull.get(hull.size() - 2), hull.get(hull.size() - 1), sorted.get(i)) <= 0) {
+                hull.remove(hull.size() - 1);
+            }
+            hull.add(sorted.get(i));
+        }
+
+        return hull;
+    }
+
+    /**
+     * 计算三个点的叉积，用于判断是否右转
+     * @param o 起点
+     * @param a 中间点
+     * @param b 终点
+     * @return 叉积值，<0表示右转，>0表示左转，=0表示共线
+     */
+    private static double crossProduct(Point2D o, Point2D a, Point2D b) {
+        return (a.getX() - o.getX()) * (b.getY() - o.getY()) - (a.getY() - o.getY()) * (b.getX() - o.getX());
+    }
+
+    /**
      * 逆时针计算多边形点顺序
      *
      * @param points 边缘点坐标列表
